@@ -8,9 +8,9 @@ export default function initSecondary() {
   const intro = document.createElement('section');
   intro.className = 'secondary-intro';
   const h1 = document.createElement('h1');
-  h1.textContent = 'Updates & Roadmap';
+  h1.textContent = 'What\'s Coming Next';
   const p = document.createElement('p');
-  p.textContent = 'High-level notes about future plans; specifics will be finalized later.';
+  p.textContent = 'Sneak peek at our roadmap and upcoming initiatives. We\'re building something great for you.';
   intro.appendChild(h1);
   intro.appendChild(p);
 
@@ -47,13 +47,23 @@ export default function initSecondary() {
   }
 
   tilesWrap.appendChild(
-    makeTile('Planned Area 1', 'A brief, non-specific description representing a focus area.', { variant: 'soft' })
+    makeTile(
+      'Planned Area 1',
+      'A key initiative we\'re excited about. Our team is dedicated to making this a reality. More details coming soon.',
+      { variant: 'soft' }
+    )
   );
   tilesWrap.appendChild(
-    makeTile('Planned Area 2', 'Placeholder text indicating another area under consideration.')
+    makeTile(
+      'Planned Area 2',
+      'Another strategic focus for the platform. We\'re listening to your feedback and building accordingly. Watch this space.'
+    )
   );
   tilesWrap.appendChild(
-    makeTile('Planned Area 3', 'Generic note about potential integrations and tooling.')
+    makeTile(
+      'Planned Area 3',
+      'Powerful integrations and tooling in the works. We\'re partnering with industry leaders to bring you the best experience.'
+    )
   );
 
   root.appendChild(intro);

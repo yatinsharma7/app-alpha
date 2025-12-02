@@ -18,15 +18,24 @@ export default function initHomepage() {
 
   const tilesWrap = document.createElement('section');
   tilesWrap.className = 'tiles';
-  // Generic feature placeholders (final features TBD)
+  // Coming soon: generic feature announcements
   tilesWrap.appendChild(
-    createTile('Feature A', 'A short, generic description of a planned capability.')
+    createTile(
+      'Feature A',
+      'Exciting new capability arriving soon. We\'re hard at work bringing this to you. Stay tuned for updates.'
+    )
   );
   tilesWrap.appendChild(
-    createTile('Feature B', 'Another brief generic description to represent future work.')
+    createTile(
+      'Feature B',
+      'An important addition to the platform. Currently in development. Be among the first to try it when it launches.'
+    )
   );
   tilesWrap.appendChild(
-    createTile('Feature C', 'Placeholder text describing an upcoming area of focus.')
+    createTile(
+      'Feature C',
+      'A powerful new tool we\'re building for you. Coming in the next release. Sign up for early access.'
+    )
   );
 
   root.appendChild(tilesWrap);

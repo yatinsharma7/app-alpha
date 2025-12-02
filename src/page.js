@@ -40,15 +40,27 @@ export default function initPage() {
   const tilesWrap = document.createElement('section');
   tilesWrap.className = 'tiles';
 
-  // Generic content for this page (details TBD)
+  // Generic content for this page (details TBD) — announcement style
   tilesWrap.appendChild(
-    createTile('Capability X', 'A neutral description of a future capability.', { cta: 'Action', variant: 'alt' })
+    createTile(
+      'Capability X',
+      'We\'re thrilled to announce work on this exciting capability. Expected to ship very soon. Learn more by exploring our roadmap.',
+      { cta: 'Get Notified', variant: 'alt' }
+    )
   );
   tilesWrap.appendChild(
-    createTile('Capability Y', 'Another neutral descriptor for an extensible feature.', { cta: 'Explore' })
+    createTile(
+      'Capability Y',
+      'An extensible feature designed with you in mind. In active development. Join our community to share feedback.',
+      { cta: 'Join Community' }
+    )
   );
   tilesWrap.appendChild(
-    createTile('Capability Z', 'Placeholder description for accessibility or quality improvements.', { cta: 'Learn' })
+    createTile(
+      'Capability Z',
+      'Quality and accessibility improvements on the horizon. We\'re committed to delivering excellence. Check back soon.',
+      { cta: 'See Roadmap' }
+    )
   );
 
   root.appendChild(tilesWrap);
