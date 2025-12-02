@@ -8,9 +8,9 @@ export default function initSecondary() {
   const intro = document.createElement('section');
   intro.className = 'secondary-intro';
   const h1 = document.createElement('h1');
-  h1.textContent = 'More From App Alpha';
+  h1.textContent = 'Updates & Roadmap';
   const p = document.createElement('p');
-  p.textContent = 'Short briefs and pointers to useful resources and configuration tips.';
+  p.textContent = 'High-level notes about future plans; specifics will be finalized later.';
   intro.appendChild(h1);
   intro.appendChild(p);
 
@@ -46,9 +46,15 @@ export default function initSecondary() {
     return tile;
   }
 
-  tilesWrap.appendChild(makeTile('Guides', 'Step-by-step guides to configuring your app.', { variant: 'soft' }));
-  tilesWrap.appendChild(makeTile('Templates', 'Prebuilt layouts and components to speed development.'));
-  tilesWrap.appendChild(makeTile('Ecosystem', 'Recommended tools and integrations.'));
+  tilesWrap.appendChild(
+    makeTile('Planned Area 1', 'A brief, non-specific description representing a focus area.', { variant: 'soft' })
+  );
+  tilesWrap.appendChild(
+    makeTile('Planned Area 2', 'Placeholder text indicating another area under consideration.')
+  );
+  tilesWrap.appendChild(
+    makeTile('Planned Area 3', 'Generic note about potential integrations and tooling.')
+  );
 
   root.appendChild(intro);
   root.appendChild(tilesWrap);

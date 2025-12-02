@@ -40,14 +40,15 @@ export default function initPage() {
   const tilesWrap = document.createElement('section');
   tilesWrap.className = 'tiles';
 
+  // Generic content for this page (details TBD)
   tilesWrap.appendChild(
-    createTile('Performance', 'Bundles optimized for fast first paint and quick iteration.', { cta: 'Profile', variant: 'alt' })
+    createTile('Capability X', 'A neutral description of a future capability.', { cta: 'Action', variant: 'alt' })
   );
   tilesWrap.appendChild(
-    createTile('Adaptable', 'Composable modules let you extend features without friction.', { cta: 'Explore' })
+    createTile('Capability Y', 'Another neutral descriptor for an extensible feature.', { cta: 'Explore' })
   );
   tilesWrap.appendChild(
-    createTile('Accessible', 'Built with semantic markup and sensible defaults for accessibility.', { cta: 'Learn' })
+    createTile('Capability Z', 'Placeholder description for accessibility or quality improvements.', { cta: 'Learn' })
   );
 
   root.appendChild(tilesWrap);

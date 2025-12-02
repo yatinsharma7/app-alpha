@@ -18,9 +18,16 @@ export default function initHomepage() {
 
   const tilesWrap = document.createElement('section');
   tilesWrap.className = 'tiles';
-  tilesWrap.appendChild(createTile('Fast**', 'Small and fast build with minimal setup.'));
-  tilesWrap.appendChild(createTile('Flexible', 'Easily adapt the template for your app.'));
-  tilesWrap.appendChild(createTile('Accessible', 'Aria-ready structure and semantic HTML.'));
+  // Generic feature placeholders (final features TBD)
+  tilesWrap.appendChild(
+    createTile('Feature A', 'A short, generic description of a planned capability.')
+  );
+  tilesWrap.appendChild(
+    createTile('Feature B', 'Another brief generic description to represent future work.')
+  );
+  tilesWrap.appendChild(
+    createTile('Feature C', 'Placeholder text describing an upcoming area of focus.')
+  );
 
   root.appendChild(tilesWrap);
 }
