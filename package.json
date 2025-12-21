@@ -21,7 +21,7 @@
     "webpack-dev-server": "^5.2.2"
   },
   "scripts": {
-    "build": "webpack --config webpack.prod.js",
+    "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack serve",
     "deploy": "git subtree push --prefix dist origin gh-pages"
   }
