@@ -1,8 +1,17 @@
 import agentStore from './agentStore';
 
+// Store cleanup functions using a WeakMap for proper memory management
+const cleanupMap = new WeakMap();
+
 export default function initHomepage() {
   const root = document.querySelector('.content');
   if (!root) return;
+
+  // Clean up any previous subscription
+  const previousCleanup = cleanupMap.get(root);
+  if (previousCleanup) {
+    previousCleanup();
+  }
 
   root.innerHTML = '';
 
@@ -30,8 +39,8 @@ export default function initHomepage() {
   updateSidebarAgentList(sidebar, agentStore.getAgents());
   updateMainAgentCards(mainSection, agentStore.getAgents());
 
-  // Store cleanup function for when page changes
-  root.dataset.cleanup = () => unsubscribe();
+  // Store cleanup function using WeakMap for when page changes
+  cleanupMap.set(root, unsubscribe);
 }
 
 function createSidebar() {
@@ -296,16 +305,19 @@ function showAddAgentModal() {
 
   document.body.appendChild(modal);
 
-  // Show modal with animation
-  setTimeout(() => modal.classList.add('show'), 10);
+  // Show modal with animation using requestAnimationFrame for proper timing
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.classList.add('show');
+    });
+  });
 
   // Event handlers
   const hideModal = () => {
     modal.classList.remove('show');
+    // Wait for CSS transition to complete (300ms as defined in CSS)
     setTimeout(() => {
-      if (modal.parentElement) {
-        modal.parentElement.removeChild(modal);
-      }
+      modal.remove();
     }, 300);
   };
 
