@@ -218,3 +218,296 @@ body {
     padding: 16px;
   }
 }
+
+/* Team Member Management Styles */
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 28px 16px 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.team-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #0f172a;
+}
+
+.add-team-member-btn {
+  padding: 10px 20px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.add-team-member-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.add-team-member-btn:active {
+  transform: translateY(0);
+}
+
+.team-members-list {
+  padding: 0 28px 28px 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--surface);
+  border: 2px dashed rgba(16,24,40,0.12);
+  border-radius: var(--radius);
+  margin-top: 20px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  color: #0f172a;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.team-member-card {
+  background: var(--surface);
+  border: 1px solid rgba(16,24,40,0.06);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-member-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card-header h3 {
+  margin: 0;
+  flex: 1;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.member-role {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(37,99,235,0.1);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #dc2626;
+  font-size: 1.5rem;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: rgba(220,38,38,0.1);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid rgba(16,24,40,0.08);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.close-btn {
+  background: transparent;
+  color: #6b7280;
+  font-size: 2rem;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #0f172a;
+}
+
+.add-team-member-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 16px;
+  border: 1px solid rgba(16,24,40,0.15);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: Roboto, sans-serif;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.team-member-role-select {
+  cursor: pointer;
+}
+
+.submit-btn {
+  padding: 12px 24px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+  margin-top: 8px;
+}
+
+.submit-btn:hover {
+  background: #1d4ed8;
+}
+
+.submit-btn:active {
+  background: #1e40af;
+}
+
+@media (max-width: 720px) {
+  .team-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .team-members-list {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+}
