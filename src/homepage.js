@@ -44,7 +44,7 @@ function createSidebar() {
 
   const toggleBtn = document.createElement('button');
   toggleBtn.className = 'sidebar-toggle';
-  toggleBtn.innerHTML = '☰';
+  toggleBtn.textContent = '☰';
   toggleBtn.title = 'Toggle sidebar';
   toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
   
@@ -153,11 +153,21 @@ function updateMainAgentCards(mainSection, agents) {
   if (agents.length === 0) {
     const emptyState = document.createElement('div');
     emptyState.className = 'empty-state';
-    emptyState.innerHTML = `
-      <div class="empty-icon">👥</div>
-      <h3>Start by adding agents to assemble your team.</h3>
-      <p>Click the "Add Agent" button above to create your first team member.</p>
-    `;
+    
+    const emptyIcon = document.createElement('div');
+    emptyIcon.className = 'empty-icon';
+    emptyIcon.textContent = '👥';
+    
+    const emptyTitle = document.createElement('h3');
+    emptyTitle.textContent = 'Start by adding agents to assemble your team.';
+    
+    const emptyText = document.createElement('p');
+    emptyText.textContent = 'Click the "Add Agent" button above to create your first team member.';
+    
+    emptyState.appendChild(emptyIcon);
+    emptyState.appendChild(emptyTitle);
+    emptyState.appendChild(emptyText);
+    
     container.appendChild(emptyState);
     return;
   }
@@ -219,7 +229,7 @@ function showAddAgentModal() {
   
   const closeBtn = document.createElement('button');
   closeBtn.className = 'modal-close';
-  closeBtn.innerHTML = '×';
+  closeBtn.textContent = '×';
   closeBtn.setAttribute('aria-label', 'Close modal');
   
   modalHeader.appendChild(modalTitle);
