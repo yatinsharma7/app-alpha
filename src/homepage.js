@@ -197,8 +197,9 @@ export default function initHomepage() {
       }
     });
     
-    // Focus on name input
-    setTimeout(() => nameInput.focus(), 100);
+    // Focus on name input after modal is added to DOM
+    const MODAL_RENDER_DELAY = 100;
+    setTimeout(() => nameInput.focus(), MODAL_RENDER_DELAY);
   }
 
   function handleFormSubmit(e) {

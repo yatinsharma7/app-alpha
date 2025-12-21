@@ -28,7 +28,7 @@ function notifyListeners() {
 // Add a new team member
 function addTeamMember(teamMember) {
   const newTeamMember = {
-    id: Date.now(),
+    id: crypto.randomUUID(),
     ...teamMember,
     createdAt: new Date().toISOString()
   };
