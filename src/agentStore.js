@@ -24,11 +24,17 @@ class AgentStore {
         const data = JSON.parse(stored);
         // Validate data structure
         if (data && typeof data === 'object' && Array.isArray(data.agents)) {
-          this.agents = data.agents;
+          // Validate each agent has required properties
+          const validAgents = data.agents.filter(agent => 
+            agent && 
+            typeof agent.id === 'number' && 
+            typeof agent.name === 'string' && 
+            typeof agent.role === 'string'
+          );
+          this.agents = validAgents;
           // Calculate nextId based on existing agents to avoid conflicts
-          const maxId = this.agents.length > 0 
-            ? Math.max(...this.agents.map(a => a.id || 0)) 
-            : 0;
+          // Use reduce to avoid call stack issues with large arrays
+          const maxId = this.agents.reduce((max, a) => Math.max(max, a.id || 0), 0);
           this.nextId = Math.max(maxId + 1, data.nextId || 1);
         } else {
           this.agents = [];
