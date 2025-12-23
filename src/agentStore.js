@@ -8,11 +8,44 @@ const AGENT_ROLES = [
   'Data Engineer'
 ];
 
+const STORAGE_KEY = 'agentStore';
+
 class AgentStore {
   constructor() {
-    this.agents = [];
     this.listeners = [];
-    this.nextId = 1;
+    this.loadFromStorage();
+  }
+
+  // Load state from localStorage
+  loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.agents = data.agents || [];
+        this.nextId = data.nextId || 1;
+      } else {
+        this.agents = [];
+        this.nextId = 1;
+      }
+    } catch (error) {
+      console.error('Failed to load agent store from localStorage:', error);
+      this.agents = [];
+      this.nextId = 1;
+    }
+  }
+
+  // Save state to localStorage
+  saveToStorage() {
+    try {
+      const data = {
+        agents: this.agents,
+        nextId: this.nextId
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to save agent store to localStorage:', error);
+    }
   }
 
   // Subscribe to state changes
@@ -41,6 +74,7 @@ class AgentStore {
       role: role
     };
     this.agents.push(agent);
+    this.saveToStorage();
     this.notify();
     return agent;
   }
@@ -50,6 +84,7 @@ class AgentStore {
     const index = this.agents.findIndex(a => a.id === id);
     if (index > -1) {
       this.agents.splice(index, 1);
+      this.saveToStorage();
       this.notify();
       return true;
     }
