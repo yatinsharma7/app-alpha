@@ -34,8 +34,8 @@ class AgentStore {
           this.agents = validAgents;
           // Calculate nextId based on existing agents to avoid conflicts
           // Use reduce to avoid call stack issues with large arrays
-          const maxId = this.agents.reduce((max, a) => Math.max(max, a.id || 0), 0);
-          this.nextId = Math.max(maxId + 1, data.nextId || 1);
+          const maxId = this.agents.reduce((max, a) => Math.max(max, a.id ?? 0), 0);
+          this.nextId = Math.max(maxId + 1, data.nextId ?? 1);
         } else {
           this.agents = [];
           this.nextId = 1;
