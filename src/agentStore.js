@@ -22,8 +22,18 @@ class AgentStore {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        this.agents = data.agents || [];
-        this.nextId = data.nextId || 1;
+        // Validate data structure
+        if (data && typeof data === 'object' && Array.isArray(data.agents)) {
+          this.agents = data.agents;
+          // Calculate nextId based on existing agents to avoid conflicts
+          const maxId = this.agents.length > 0 
+            ? Math.max(...this.agents.map(a => a.id || 0)) 
+            : 0;
+          this.nextId = Math.max(maxId + 1, data.nextId || 1);
+        } else {
+          this.agents = [];
+          this.nextId = 1;
+        }
       } else {
         this.agents = [];
         this.nextId = 1;
