@@ -8,11 +8,42 @@ const AGENT_ROLES = [
   'Data Engineer'
 ];
 
+const STORAGE_KEY = 'app-alpha-agents';
+
 class AgentStore {
   constructor() {
     this.agents = [];
     this.listeners = [];
     this.nextId = 1;
+    this.loadFromStorage();
+  }
+
+  // Load state from localStorage
+  loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.agents = data.agents || [];
+        this.nextId = data.nextId || 1;
+      }
+    } catch (error) {
+      console.error('Failed to load state from localStorage:', error);
+      // Continue with empty state if loading fails
+    }
+  }
+
+  // Save state to localStorage
+  saveToStorage() {
+    try {
+      const data = {
+        agents: this.agents,
+        nextId: this.nextId
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to save state to localStorage:', error);
+    }
   }
 
   // Subscribe to state changes
@@ -30,6 +61,7 @@ class AgentStore {
   // Notify all listeners of state change
   notify() {
     this.listeners.forEach(listener => listener(this.agents));
+    this.saveToStorage();
   }
 
   // Add a new agent
@@ -64,6 +96,13 @@ class AgentStore {
   // Get available roles
   getRoles() {
     return [...AGENT_ROLES];
+  }
+
+  // Clear all agents (useful for reset)
+  clearAllAgents() {
+    this.agents = [];
+    this.nextId = 1;
+    this.notify();
   }
 }
 
