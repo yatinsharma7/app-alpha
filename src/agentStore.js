@@ -13,6 +13,7 @@ const STORAGE_KEY = 'app-alpha-agents';
 class AgentStore {
   constructor() {
     this.agents = [];
+    this.approver = { id: 'human-approver', name: 'You' };
     this.listeners = [];
     this.nextId = 1;
     this.loadFromStorage();
@@ -25,6 +26,7 @@ class AgentStore {
       if (stored) {
         const data = JSON.parse(stored);
         this.agents = data.agents || [];
+        this.approver = data.approver || { id: 'human-approver', name: 'You' };
         this.nextId = data.nextId || 1;
       }
     } catch (error) {
@@ -38,6 +40,7 @@ class AgentStore {
     try {
       const data = {
         agents: this.agents,
+        approver: this.approver,
         nextId: this.nextId
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -96,6 +99,21 @@ class AgentStore {
   // Get available roles
   getRoles() {
     return [...AGENT_ROLES];
+  }
+
+  // Get approver
+  getApprover() {
+    return { ...this.approver };
+  }
+
+  // Update approver name
+  updateApproverName(name) {
+    if (name && name.trim()) {
+      this.approver.name = name.trim();
+      this.notify();
+      return true;
+    }
+    return false;
   }
 
   // Clear all agents (useful for reset)
