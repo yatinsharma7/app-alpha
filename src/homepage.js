@@ -32,11 +32,13 @@ export default function initHomepage() {
   // Subscribe to agent store changes to keep UI in sync
   const unsubscribe = agentStore.subscribe((agents) => {
     updateSidebarAgentList(sidebar, agents);
+    updateSidebarApprover(sidebar, agentStore.getApprover());
     updateMainAgentCards(mainSection, agents);
   });
 
   // Initial render
   updateSidebarAgentList(sidebar, agentStore.getAgents());
+  updateSidebarApprover(sidebar, agentStore.getApprover());
   updateMainAgentCards(mainSection, agentStore.getAgents());
 
   // Store cleanup function using WeakMap for when page changes
@@ -47,37 +49,68 @@ function createSidebar() {
   const sidebar = document.createElement('aside');
   sidebar.className = 'team-sidebar';
 
-  // Sidebar header with toggle
-  const sidebarHeader = document.createElement('div');
-  sidebarHeader.className = 'sidebar-header';
+  // Toggle button at the top for collapsed state
+  const topToggleBtn = document.createElement('button');
+  topToggleBtn.className = 'sidebar-top-toggle';
+  topToggleBtn.textContent = '☰';
+  topToggleBtn.title = 'Toggle sidebar';
+  topToggleBtn.setAttribute('aria-label', 'Toggle sidebar');
 
+  // Approver section container
+  const approverSection = document.createElement('div');
+  approverSection.className = 'sidebar-approver-section';
+  
+  const approverHeaderContainer = document.createElement('div');
+  approverHeaderContainer.className = 'approver-header-container';
+  
+  const approverHeader = document.createElement('h3');
+  approverHeader.className = 'approver-header';
+  approverHeader.textContent = 'Team Owner';
+  
   const toggleBtn = document.createElement('button');
   toggleBtn.className = 'sidebar-toggle';
   toggleBtn.textContent = '☰';
   toggleBtn.title = 'Toggle sidebar';
   toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
   
-  const headerTitle = document.createElement('h2');
-  headerTitle.className = 'sidebar-title';
-  headerTitle.textContent = 'Team Members';
+  approverHeaderContainer.appendChild(approverHeader);
+  approverHeaderContainer.appendChild(toggleBtn);
+  
+  const approverList = document.createElement('ul');
+  approverList.className = 'sidebar-approver-list';
+  
+  approverSection.appendChild(approverHeaderContainer);
+  approverSection.appendChild(approverList);
 
-  sidebarHeader.appendChild(toggleBtn);
-  sidebarHeader.appendChild(headerTitle);
-
-  // Agent list container
+  // Agent list section
+  const agentSection = document.createElement('div');
+  agentSection.className = 'sidebar-agent-section';
+  
+  const agentHeader = document.createElement('h3');
+  agentHeader.className = 'agent-list-header';
+  agentHeader.textContent = 'Team Members';
+  
   const agentList = document.createElement('ul');
   agentList.className = 'sidebar-agent-list';
+  
+  agentSection.appendChild(agentHeader);
+  agentSection.appendChild(agentList);
 
-  sidebar.appendChild(sidebarHeader);
-  sidebar.appendChild(agentList);
+  sidebar.appendChild(topToggleBtn);
+  sidebar.appendChild(approverSection);
+  sidebar.appendChild(agentSection);
 
   // Toggle sidebar collapse/expand
   let isCollapsed = false;
-  toggleBtn.addEventListener('click', () => {
+  const toggleSidebar = () => {
     isCollapsed = !isCollapsed;
     sidebar.classList.toggle('collapsed', isCollapsed);
     toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
-  });
+    topToggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+  };
+  
+  toggleBtn.addEventListener('click', toggleSidebar);
+  topToggleBtn.addEventListener('click', toggleSidebar);
 
   return sidebar;
 }
@@ -146,10 +179,160 @@ function updateSidebarAgentList(sidebar, agents) {
     
     info.appendChild(name);
     info.appendChild(role);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-agent-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.setAttribute('aria-label', `Remove ${agent.name}`);
+    removeBtn.title = 'Remove agent';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showConfirmationModal(
+        `Are you sure you want to remove ${agent.name} from the team?`,
+        () => agentStore.removeAgent(agent.id)
+      );
+    });
+    
     li.appendChild(icon);
     li.appendChild(info);
+    li.appendChild(removeBtn);
     
     agentList.appendChild(li);
+  });
+}
+
+function updateSidebarApprover(sidebar, approver) {
+  const approverList = sidebar.querySelector('.sidebar-approver-list');
+  if (!approverList) return;
+
+  approverList.innerHTML = '';
+
+  const li = document.createElement('li');
+  li.className = 'sidebar-approver-item';
+  
+  const icon = document.createElement('span');
+  icon.className = 'approver-icon';
+  icon.textContent = '👤';
+  
+  const info = document.createElement('div');
+  info.className = 'approver-info';
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.className = 'sidebar-approver-name-input';
+  nameInput.value = approver.name;
+  nameInput.placeholder = 'Enter name';
+  nameInput.setAttribute('aria-label', 'Team owner name');
+  
+  info.appendChild(nameInput);
+  li.appendChild(icon);
+  li.appendChild(info);
+  
+  approverList.appendChild(li);
+  
+  // Handle name editing
+  let originalValue = approver.name;
+  
+  nameInput.addEventListener('focus', () => {
+    originalValue = nameInput.value;
+    li.classList.add('editing');
+  });
+  
+  nameInput.addEventListener('blur', () => {
+    li.classList.remove('editing');
+    const newName = nameInput.value.trim();
+    if (newName && newName !== originalValue) {
+      agentStore.updateApproverName(newName);
+    } else if (!newName) {
+      nameInput.value = originalValue;
+    }
+  });
+  
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      nameInput.blur();
+    } else if (e.key === 'Escape') {
+      nameInput.value = originalValue;
+      nameInput.blur();
+    }
+  });
+}
+
+function updateMainApprover(mainSection, approver) {
+  const container = mainSection.querySelector('.approver-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const tile = document.createElement('article');
+  tile.className = 'approver-tile';
+  
+  const tileHeader = document.createElement('div');
+  tileHeader.className = 'approver-tile-header';
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'approver-avatar';
+  avatar.textContent = '👤';
+  
+  tileHeader.appendChild(avatar);
+  
+  const tileBody = document.createElement('div');
+  tileBody.className = 'approver-tile-body';
+  
+  const nameContainer = document.createElement('div');
+  nameContainer.className = 'approver-name-container';
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.className = 'approver-name-input';
+  nameInput.value = approver.name;
+  nameInput.placeholder = 'Enter your name';
+  nameInput.setAttribute('aria-label', 'Approver name');
+  
+  const editIcon = document.createElement('span');
+  editIcon.className = 'edit-icon';
+  editIcon.textContent = '✏️';
+  editIcon.title = 'Click name to edit';
+  
+  nameContainer.appendChild(nameInput);
+  
+  const roleLabel = document.createElement('p');
+  roleLabel.className = 'approver-tile-role';
+  roleLabel.textContent = 'Human Approver';
+  
+  tileBody.appendChild(nameContainer);
+  tileBody.appendChild(roleLabel);
+  
+  tile.appendChild(tileHeader);
+  tile.appendChild(tileBody);
+  
+  container.appendChild(tile);
+  
+  // Handle name editing
+  let originalValue = approver.name;
+  
+  nameInput.addEventListener('focus', () => {
+    originalValue = nameInput.value;
+    tile.classList.add('editing');
+  });
+  
+  nameInput.addEventListener('blur', () => {
+    tile.classList.remove('editing');
+    const newName = nameInput.value.trim();
+    if (newName && newName !== originalValue) {
+      agentStore.updateApproverName(newName);
+    } else if (!newName) {
+      nameInput.value = originalValue;
+    }
+  });
+  
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      nameInput.blur();
+    } else if (e.key === 'Escape') {
+      nameInput.value = originalValue;
+      nameInput.blur();
+    }
   });
 }
 
@@ -192,7 +375,21 @@ function updateMainAgentCards(mainSection, agents) {
     avatar.className = 'agent-avatar';
     avatar.textContent = agent.name.charAt(0);
     
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-agent-card-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.setAttribute('aria-label', `Remove ${agent.name}`);
+    removeBtn.title = 'Remove agent';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showConfirmationModal(
+        `Are you sure you want to remove ${agent.name} from the team?`,
+        () => agentStore.removeAgent(agent.id)
+      );
+    });
+    
     cardHeader.appendChild(avatar);
+    cardHeader.appendChild(removeBtn);
     
     const cardBody = document.createElement('div');
     cardBody.className = 'agent-card-body';
@@ -211,6 +408,99 @@ function updateMainAgentCards(mainSection, agents) {
     card.appendChild(cardBody);
     
     container.appendChild(card);
+  });
+}
+
+function showConfirmationModal(message, onConfirm) {
+  // Create confirmation modal
+  const modal = document.createElement('div');
+  modal.className = 'modal confirmation-modal';
+
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content confirmation-content';
+
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'modal-header';
+  
+  const modalTitle = document.createElement('h2');
+  modalTitle.textContent = 'Confirm Action';
+  
+  modalHeader.appendChild(modalTitle);
+
+  const modalBody = document.createElement('div');
+  modalBody.className = 'modal-body';
+
+  const messageText = document.createElement('p');
+  messageText.className = 'confirmation-message';
+  messageText.textContent = message;
+
+  modalBody.appendChild(messageText);
+
+  const modalFooter = document.createElement('div');
+  modalFooter.className = 'modal-footer';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'Cancel';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn btn-danger';
+  confirmBtn.textContent = 'Remove';
+
+  modalFooter.appendChild(cancelBtn);
+  modalFooter.appendChild(confirmBtn);
+
+  modalContent.appendChild(modalHeader);
+  modalContent.appendChild(modalBody);
+  modalContent.appendChild(modalFooter);
+  modal.appendChild(modalContent);
+
+  document.body.appendChild(modal);
+
+  // Show modal with animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.classList.add('show');
+      confirmBtn.focus();
+    });
+  });
+
+  // Event handlers
+  const hideModal = () => {
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  };
+
+  const handleConfirm = () => {
+    hideModal();
+    if (onConfirm) {
+      onConfirm();
+    }
+  };
+
+  cancelBtn.addEventListener('click', hideModal);
+  confirmBtn.addEventListener('click', handleConfirm);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      hideModal();
+    }
+  });
+
+  // Keyboard support
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      hideModal();
+    } else if (e.key === 'Enter') {
+      handleConfirm();
+    }
+  };
+  
+  document.addEventListener('keydown', handleKeyDown);
+  modal.addEventListener('remove', () => {
+    document.removeEventListener('keydown', handleKeyDown);
   });
 }
 
