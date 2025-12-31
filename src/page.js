@@ -138,39 +138,32 @@ function createStandardSetupContent() {
     rolesContainer.appendChild(rolesLabel);
     rolesContainer.appendChild(rolesList);
     
-    // Two-button approach
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'template-buttons';
+    const selectBtn = document.createElement('button');
+    selectBtn.className = 'template-select-btn';
     
-    const useBtn = document.createElement('button');
-    useBtn.className = 'template-btn template-use-btn';
-    useBtn.textContent = 'Use as-is';
-    useBtn.addEventListener('click', () => {
-      showConfirmationModal(
-        `Create a team for "${template.name}"? This will replace your current team.`,
-        () => {
-          agentStore.createStandardTeam(template.id);
-          // Navigate to home
-          const homeLink = document.getElementById('home-link');
-          if (homeLink) homeLink.click();
-        }
-      );
-    });
-    
-    const customizeBtn = document.createElement('button');
-    customizeBtn.className = 'template-btn template-customize-btn';
-    customizeBtn.textContent = 'Customize';
-    customizeBtn.addEventListener('click', () => {
-      showTemplateCustomizeModal(template);
-    });
-    
-    buttonsContainer.appendChild(useBtn);
-    buttonsContainer.appendChild(customizeBtn);
+    if (isActive) {
+      selectBtn.classList.add('active');
+      selectBtn.innerHTML = '✓ Currently Active';
+      selectBtn.disabled = true;
+    } else {
+      selectBtn.textContent = 'Use This Team';
+      selectBtn.addEventListener('click', () => {
+        showConfirmationModal(
+          `Create a team for "${template.name}"? This will replace your current team.`,
+          () => {
+            agentStore.createStandardTeam(template.id);
+            // Navigate to home
+            const homeLink = document.getElementById('home-link');
+            if (homeLink) homeLink.click();
+          }
+        );
+      });
+    }
     
     cardBody.appendChild(cardTitle);
     cardBody.appendChild(cardDescription);
     cardBody.appendChild(rolesContainer);
-    cardBody.appendChild(buttonsContainer);
+    cardBody.appendChild(selectBtn);
     
     card.appendChild(cardIcon);
     card.appendChild(cardBody);
@@ -499,200 +492,5 @@ function showAddAgentModal() {
       agentStore.addAgent(role);
       hideModal();
     }
-  });
-}
-
-function showTemplateCustomizeModal(template) {
-  const modal = document.createElement('div');
-  modal.className = 'modal customize-modal';
-
-  const modalContent = document.createElement('div');
-  modalContent.className = 'modal-content';
-
-  const modalHeader = document.createElement('div');
-  modalHeader.className = 'modal-header';
-  
-  const modalTitle = document.createElement('h2');
-  modalTitle.textContent = `Customize: ${template.name}`;
-  
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'modal-close';
-  closeBtn.textContent = '×';
-  closeBtn.setAttribute('aria-label', 'Close modal');
-  
-  modalHeader.appendChild(modalTitle);
-  modalHeader.appendChild(closeBtn);
-
-  const modalBody = document.createElement('div');
-  modalBody.className = 'modal-body';
-  
-  const intro = document.createElement('p');
-  intro.className = 'customize-intro';
-  intro.textContent = 'Customize this template by removing unwanted agents or adding new ones:';
-  modalBody.appendChild(intro);
-  
-  // Template agents (removable)
-  const agentsSection = document.createElement('div');
-  agentsSection.className = 'customize-agents-section';
-  
-  const agentsTitle = document.createElement('h3');
-  agentsTitle.textContent = 'Team Members';
-  agentsSection.appendChild(agentsTitle);
-  
-  const agentsList = document.createElement('div');
-  agentsList.className = 'customize-agents-list';
-  
-  // Track which agents are still included
-  const includedRoles = new Set(template.roles);
-  
-  template.roles.forEach(role => {
-    const agentItem = document.createElement('div');
-    agentItem.className = 'customize-agent-item';
-    
-    const roleName = document.createElement('span');
-    roleName.className = 'customize-agent-role';
-    roleName.textContent = role;
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'customize-remove-btn';
-    removeBtn.textContent = '×';
-    removeBtn.title = `Remove ${role}`;
-    removeBtn.addEventListener('click', () => {
-      agentItem.classList.add('removed');
-      includedRoles.delete(role);
-    });
-    
-    agentItem.appendChild(roleName);
-    agentItem.appendChild(removeBtn);
-    agentsList.appendChild(agentItem);
-  });
-  
-  agentsSection.appendChild(agentsList);
-  modalBody.appendChild(agentsSection);
-  
-  // Add more agents
-  const addSection = document.createElement('div');
-  addSection.className = 'customize-add-section';
-  
-  const addTitle = document.createElement('h3');
-  addTitle.textContent = 'Add More Agents';
-  addSection.appendChild(addTitle);
-  
-  const addForm = document.createElement('div');
-  addForm.className = 'customize-add-form';
-  
-  const roleSelect = document.createElement('select');
-  roleSelect.className = 'customize-role-select';
-  
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = 'Choose a role...';
-  placeholder.disabled = true;
-  placeholder.selected = true;
-  roleSelect.appendChild(placeholder);
-  
-  agentStore.getRoles().forEach(role => {
-    const option = document.createElement('option');
-    option.value = role;
-    option.textContent = role;
-    roleSelect.appendChild(option);
-  });
-  
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn btn-secondary';
-  addBtn.textContent = '+ Add';
-  addBtn.addEventListener('click', () => {
-    const role = roleSelect.value;
-    if (role) {
-      includedRoles.add(role);
-      
-      const agentItem = document.createElement('div');
-      agentItem.className = 'customize-agent-item added';
-      
-      const roleName = document.createElement('span');
-      roleName.className = 'customize-agent-role';
-      roleName.textContent = role;
-      
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'customize-remove-btn';
-      removeBtn.textContent = '×';
-      removeBtn.title = `Remove ${role}`;
-      removeBtn.addEventListener('click', () => {
-        agentItem.remove();
-        includedRoles.delete(role);
-      });
-      
-      agentItem.appendChild(roleName);
-      agentItem.appendChild(removeBtn);
-      agentsList.appendChild(agentItem);
-      
-      roleSelect.value = '';
-    }
-  });
-  
-  addForm.appendChild(roleSelect);
-  addForm.appendChild(addBtn);
-  addSection.appendChild(addForm);
-  modalBody.appendChild(addSection);
-
-  const modalFooter = document.createElement('div');
-  modalFooter.className = 'modal-footer';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel';
-
-  const confirmBtn = document.createElement('button');
-  confirmBtn.className = 'btn btn-primary';
-  confirmBtn.textContent = 'Create Team';
-
-  modalFooter.appendChild(cancelBtn);
-  modalFooter.appendChild(confirmBtn);
-
-  modalContent.appendChild(modalHeader);
-  modalContent.appendChild(modalBody);
-  modalContent.appendChild(modalFooter);
-  modal.appendChild(modalContent);
-
-  document.body.appendChild(modal);
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      modal.classList.add('show');
-      confirmBtn.focus();
-    });
-  });
-
-  const hideModal = () => {
-    modal.classList.remove('show');
-    setTimeout(() => modal.remove(), 300);
-  };
-
-  const handleConfirm = () => {
-    const roles = Array.from(includedRoles);
-    if (roles.length > 0) {
-      agentStore.clearAllAgents();
-      roles.forEach(role => agentStore.addAgent(role));
-      hideModal();
-      // Navigate to home
-      const homeLink = document.getElementById('home-link');
-      if (homeLink) homeLink.click();
-    }
-  };
-
-  closeBtn.addEventListener('click', hideModal);
-  cancelBtn.addEventListener('click', hideModal);
-  confirmBtn.addEventListener('click', handleConfirm);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) hideModal();
-  });
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') hideModal();
-  };
-  
-  document.addEventListener('keydown', handleKeyDown);
-  modal.addEventListener('remove', () => {
-    document.removeEventListener('keydown', handleKeyDown);
   });
 }
