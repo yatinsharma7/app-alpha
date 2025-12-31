@@ -3,6 +3,28 @@ import agentStore from './agentStore';
 // Store cleanup functions using a WeakMap for proper memory management
 const cleanupMap = new WeakMap();
 
+// Track selected agent and chat history
+let selectedAgent = null;
+const chatHistory = {}; // Format: { agentId: [{ text, sender, timestamp }] }
+
+// Load chat history from localStorage
+function loadChatHistory() {
+  const saved = localStorage.getItem('chatHistory');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.assign(chatHistory, parsed);
+    } catch (e) {
+      console.error('Failed to load chat history', e);
+    }
+  }
+}
+
+// Save chat history to localStorage
+function saveChatHistory() {
+  localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+}
+
 export default function initHomepage() {
   const root = document.querySelector('.content');
   if (!root) return;
@@ -14,6 +36,9 @@ export default function initHomepage() {
   }
 
   root.innerHTML = '';
+  
+  // Load chat history
+  loadChatHistory();
 
   // Create the two-column layout container
   const homeLayout = document.createElement('div');
@@ -31,15 +56,13 @@ export default function initHomepage() {
 
   // Subscribe to agent store changes to keep UI in sync
   const unsubscribe = agentStore.subscribe((agents) => {
-    updateSidebarAgentList(sidebar, agents);
+    updateSidebarAgentList(sidebar, agents, mainSection);
     updateSidebarApprover(sidebar, agentStore.getApprover());
-    updateMainAgentCards(mainSection, agents);
   });
 
   // Initial render
-  updateSidebarAgentList(sidebar, agentStore.getAgents());
+  updateSidebarAgentList(sidebar, agentStore.getAgents(), mainSection);
   updateSidebarApprover(sidebar, agentStore.getApprover());
-  updateMainAgentCards(mainSection, agentStore.getAgents());
 
   // Store cleanup function using WeakMap for when page changes
   cleanupMap.set(root, unsubscribe);
@@ -117,34 +140,97 @@ function createSidebar() {
 
 function createMainSection() {
   const mainSection = document.createElement('main');
-  mainSection.className = 'team-main';
+  mainSection.className = 'team-main chat-window';
 
-  // Header with Add Agent button
-  const mainHeader = document.createElement('div');
-  mainHeader.className = 'main-header';
+  // Chat header
+  const chatHeader = document.createElement('div');
+  chatHeader.className = 'chat-header';
 
-  const mainTitle = document.createElement('h1');
-  mainTitle.textContent = 'Assemble Your Team';
+  const chatTitle = document.createElement('h2');
+  chatTitle.textContent = 'Select an agent to start chatting';
+  chatTitle.className = 'chat-title';
   
-  const addAgentBtn = document.createElement('button');
-  addAgentBtn.className = 'add-agent-btn';
-  addAgentBtn.textContent = '+ Add Agent';
-  addAgentBtn.addEventListener('click', () => showAddAgentModal());
+  chatHeader.appendChild(chatTitle);
 
-  mainHeader.appendChild(mainTitle);
-  mainHeader.appendChild(addAgentBtn);
+  // Messages container
+  const messagesContainer = document.createElement('div');
+  messagesContainer.className = 'chat-messages';
 
-  // Agent cards container
-  const agentCardsContainer = document.createElement('div');
-  agentCardsContainer.className = 'agent-cards-container';
+  // Empty state
+  const emptyState = document.createElement('div');
+  emptyState.className = 'chat-empty-state';
+  emptyState.innerHTML = '<p>💬</p><p>Select an agent from the sidebar to begin conversation</p>';
+  messagesContainer.appendChild(emptyState);
 
-  mainSection.appendChild(mainHeader);
-  mainSection.appendChild(agentCardsContainer);
+  // Input area
+  const inputArea = document.createElement('div');
+  inputArea.className = 'chat-input-area';
+
+  const messageInput = document.createElement('input');
+  messageInput.type = 'text';
+  messageInput.className = 'chat-input';
+  messageInput.placeholder = 'Type your message...';
+  messageInput.disabled = true;
+
+  const sendButton = document.createElement('button');
+  sendButton.className = 'chat-send-btn';
+  sendButton.textContent = 'Send';
+  sendButton.disabled = true;
+
+  // Send message handler
+  const sendMessage = () => {
+    const text = messageInput.value.trim();
+    if (!text || !selectedAgent) return;
+
+    // Add message to history
+    if (!chatHistory[selectedAgent.id]) {
+      chatHistory[selectedAgent.id] = [];
+    }
+    
+    const message = {
+      text,
+      sender: 'user',
+      timestamp: new Date().toISOString()
+    };
+    
+    chatHistory[selectedAgent.id].push(message);
+    saveChatHistory();
+    
+    // Update UI
+    updateChatMessages(mainSection, selectedAgent);
+    messageInput.value = '';
+    
+    // Simulate agent response after a short delay
+    setTimeout(() => {
+      const agentResponse = {
+        text: `I received your message: "${text}". How can I help you further?`,
+        sender: 'agent',
+        timestamp: new Date().toISOString()
+      };
+      chatHistory[selectedAgent.id].push(agentResponse);
+      saveChatHistory();
+      updateChatMessages(mainSection, selectedAgent);
+    }, 1000);
+  };
+
+  sendButton.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  inputArea.appendChild(messageInput);
+  inputArea.appendChild(sendButton);
+
+  mainSection.appendChild(chatHeader);
+  mainSection.appendChild(messagesContainer);
+  mainSection.appendChild(inputArea);
 
   return mainSection;
 }
 
-function updateSidebarAgentList(sidebar, agents) {
+function updateSidebarAgentList(sidebar, agents, mainSection) {
   const agentList = sidebar.querySelector('.sidebar-agent-list');
   if (!agentList) return;
 
@@ -161,6 +247,28 @@ function updateSidebarAgentList(sidebar, agents) {
   agents.forEach(agent => {
     const li = document.createElement('li');
     li.className = 'sidebar-agent-item';
+    
+    // Add selected state if this is the selected agent
+    if (selectedAgent && selectedAgent.id === agent.id) {
+      li.classList.add('selected');
+    }
+    
+    // Click handler to select agent
+    li.addEventListener('click', (e) => {
+      // Don't trigger if clicking remove button
+      if (e.target.closest('.remove-agent-btn')) return;
+      
+      selectedAgent = agent;
+      updateChatWindow(mainSection, agent);
+      
+      // Update selected state in sidebar
+      agentList.querySelectorAll('.sidebar-agent-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      li.classList.add('selected');
+    });
+    
+    li.style.cursor = 'pointer';
     
     const icon = document.createElement('span');
     icon.className = 'agent-icon';
@@ -256,6 +364,75 @@ function updateSidebarApprover(sidebar, approver) {
       nameInput.blur();
     }
   });
+}
+
+// Update chat window when an agent is selected
+function updateChatWindow(mainSection, agent) {
+  const chatHeader = mainSection.querySelector('.chat-header');
+  const chatTitle = mainSection.querySelector('.chat-title');
+  const messageInput = mainSection.querySelector('.chat-input');
+  const sendButton = mainSection.querySelector('.chat-send-btn');
+  
+  if (chatTitle) {
+    chatTitle.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+          ${agent.name.charAt(0)}
+        </div>
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 600;">${agent.name}</div>
+          <div style="font-size: 0.9rem; color: #64748b; font-weight: 400;">${agent.role}</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Enable input and send button
+  if (messageInput) messageInput.disabled = false;
+  if (sendButton) sendButton.disabled = false;
+  
+  // Update messages
+  updateChatMessages(mainSection, agent);
+}
+
+// Update chat messages display
+function updateChatMessages(mainSection, agent) {
+  const messagesContainer = mainSection.querySelector('.chat-messages');
+  if (!messagesContainer) return;
+  
+  messagesContainer.innerHTML = '';
+  
+  const messages = chatHistory[agent.id] || [];
+  
+  if (messages.length === 0) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'chat-empty-state';
+    emptyState.innerHTML = '<p>💬</p><p>No messages yet. Start the conversation!</p>';
+    messagesContainer.appendChild(emptyState);
+    return;
+  }
+  
+  messages.forEach(message => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${message.sender}`;
+    
+    const messageBubble = document.createElement('div');
+    messageBubble.className = 'message-bubble';
+    messageBubble.textContent = message.text;
+    
+    const messageTime = document.createElement('div');
+    messageTime.className = 'message-time';
+    const date = new Date(message.timestamp);
+    messageTime.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.appendChild(messageBubble);
+    messageDiv.appendChild(messageTime);
+    
+    messagesContainer.appendChild(messageDiv);
+  });
+  
+  // Scroll to bottom
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 function updateMainApprover(mainSection, approver) {
