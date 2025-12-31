@@ -262,6 +262,10 @@ function updateAgentCards(container, agents) {
     const cardHeader = document.createElement('div');
     cardHeader.className = 'agent-card-header';
     
+    // Apply role-specific color
+    const roleColor = agentStore.getRoleColor(agent.role);
+    cardHeader.style.background = `linear-gradient(135deg, ${roleColor.primary}, ${roleColor.secondary})`;
+    
     const avatar = document.createElement('div');
     avatar.className = 'agent-avatar';
     avatar.textContent = agent.name.charAt(0);
@@ -285,14 +289,45 @@ function updateAgentCards(container, agents) {
     const cardBody = document.createElement('div');
     cardBody.className = 'agent-card-body';
     
-    const name = document.createElement('h3');
-    name.textContent = agent.name;
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'agent-card-name-input';
+    nameInput.value = agent.name;
+    nameInput.placeholder = agent.role;
+    nameInput.setAttribute('aria-label', `Edit name for ${agent.name}`);
     
     const role = document.createElement('p');
     role.className = 'agent-card-role';
     role.textContent = agent.role;
     
-    cardBody.appendChild(name);
+    // Handle name editing
+    let originalValue = agent.name;
+    
+    nameInput.addEventListener('focus', () => {
+      originalValue = nameInput.value;
+      card.classList.add('editing');
+    });
+    
+    nameInput.addEventListener('blur', () => {
+      card.classList.remove('editing');
+      const newName = nameInput.value.trim();
+      if (newName && newName !== originalValue) {
+        agentStore.updateAgentName(agent.id, newName);
+      } else if (!newName) {
+        nameInput.value = originalValue;
+      }
+    });
+    
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        nameInput.blur();
+      } else if (e.key === 'Escape') {
+        nameInput.value = originalValue;
+        nameInput.blur();
+      }
+    });
+    
+    cardBody.appendChild(nameInput);
     cardBody.appendChild(role);
     
     card.appendChild(cardHeader);
@@ -415,12 +450,12 @@ function showAddAgentModal() {
   const form = document.createElement('form');
   form.className = 'add-agent-form';
 
-  const formGroup = document.createElement('div');
-  formGroup.className = 'form-group';
+  const roleFormGroup = document.createElement('div');
+  roleFormGroup.className = 'form-group';
 
-  const label = document.createElement('label');
-  label.textContent = 'Select Agent Role';
-  label.setAttribute('for', 'agent-role-select');
+  const roleLabel = document.createElement('label');
+  roleLabel.textContent = 'Select Agent Role';
+  roleLabel.setAttribute('for', 'agent-role-select');
 
   const select = document.createElement('select');
   select.id = 'agent-role-select';
@@ -441,8 +476,44 @@ function showAddAgentModal() {
     select.appendChild(option);
   });
 
-  formGroup.appendChild(label);
-  formGroup.appendChild(select);
+  roleFormGroup.appendChild(roleLabel);
+  roleFormGroup.appendChild(select);
+
+  // Name input field
+  const nameFormGroup = document.createElement('div');
+  nameFormGroup.className = 'form-group';
+
+  const nameLabel = document.createElement('label');
+  nameLabel.textContent = 'Agent Name (Optional)';
+  nameLabel.setAttribute('for', 'agent-name-input');
+
+  const nameInput = document.createElement('input');
+  nameInput.id = 'agent-name-input';
+  nameInput.type = 'text';
+  nameInput.className = 'agent-name-input';
+  nameInput.placeholder = 'e.g., Sarah Chen';
+
+  const nameHelpText = document.createElement('small');
+  nameHelpText.className = 'form-help-text';
+  nameHelpText.textContent = 'Leave blank to use role name';
+  nameHelpText.style.color = '#6b7280';
+  nameHelpText.style.fontSize = '0.85rem';
+  nameHelpText.style.marginTop = '4px';
+
+  nameFormGroup.appendChild(nameLabel);
+  nameFormGroup.appendChild(nameInput);
+  nameFormGroup.appendChild(nameHelpText);
+
+  form.appendChild(roleFormGroup);
+  form.appendChild(nameFormGroup);
+
+  // Auto-suggest name when role is selected
+  select.addEventListener('change', () => {
+    if (select.value && !nameInput.value.trim()) {
+      nameInput.value = agentStore.getSuggestedName();
+      nameInput.select(); // Highlight the suggested name for easy editing
+    }
+  });
 
   const formActions = document.createElement('div');
   formActions.className = 'form-actions';
@@ -460,7 +531,6 @@ function showAddAgentModal() {
   formActions.appendChild(cancelBtn);
   formActions.appendChild(submitBtn);
 
-  form.appendChild(formGroup);
   form.appendChild(formActions);
   modalBody.appendChild(form);
 
@@ -488,8 +558,9 @@ function showAddAgentModal() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const role = select.value;
+    const customName = nameInput.value.trim();
     if (role) {
-      agentStore.addAgent(role);
+      agentStore.addAgent(role, customName || null);
       hideModal();
     }
   });

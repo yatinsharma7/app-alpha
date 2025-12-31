@@ -58,11 +58,14 @@ export default function initHomepage() {
   const unsubscribe = agentStore.subscribe((agents) => {
     updateSidebarAgentList(sidebar, agents, mainSection);
     updateSidebarApprover(sidebar, agentStore.getApprover());
+    updateMainSection(mainSection, agents);
   });
 
   // Initial render
-  updateSidebarAgentList(sidebar, agentStore.getAgents(), mainSection);
+  const initialAgents = agentStore.getAgents();
+  updateSidebarAgentList(sidebar, initialAgents, mainSection);
   updateSidebarApprover(sidebar, agentStore.getApprover());
+  updateMainSection(mainSection, initialAgents);
 
   // Store cleanup function using WeakMap for when page changes
   cleanupMap.set(root, unsubscribe);
@@ -230,6 +233,120 @@ function createMainSection() {
   return mainSection;
 }
 
+function updateMainSection(mainSection, agents) {
+  if (agents.length === 0) {
+    // Show empty state when no team exists
+    mainSection.innerHTML = '';
+    mainSection.className = 'team-main';
+    mainSection.style.display = 'flex';
+    mainSection.style.alignItems = 'center';
+    mainSection.style.justifyContent = 'center';
+    
+    const emptyStateContainer = document.createElement('div');
+    emptyStateContainer.className = 'empty-state-centered';
+    
+    const emptyIcon = document.createElement('div');
+    emptyIcon.className = 'empty-state-icon';
+    emptyIcon.textContent = '👥';
+    
+    const emptyTitle = document.createElement('h2');
+    emptyTitle.className = 'empty-state-title';
+    emptyTitle.textContent = 'No Team Assembled Yet';
+    
+    const emptyText = document.createElement('p');
+    emptyText.className = 'empty-state-text';
+    emptyText.textContent = 'Create your AI team to start collaborating. Choose from pre-built templates or build a custom team with specific roles.';
+    
+    const startBtn = document.createElement('button');
+    startBtn.className = 'empty-state-start-btn';
+    startBtn.textContent = 'Build Your Team';
+    startBtn.addEventListener('click', () => {
+      const teamAssemblyLink = document.getElementById('team-assembly-link');
+      if (teamAssemblyLink) teamAssemblyLink.click();
+    });
+    
+    emptyStateContainer.appendChild(emptyIcon);
+    emptyStateContainer.appendChild(emptyTitle);
+    emptyStateContainer.appendChild(emptyText);
+    emptyStateContainer.appendChild(startBtn);
+    
+    mainSection.appendChild(emptyStateContainer);
+  } else if (!mainSection.querySelector('.chat-header')) {
+    // Re-create chat interface if it was cleared
+    mainSection.innerHTML = '';
+    mainSection.className = 'team-main chat-window';
+    mainSection.style.display = '';
+    mainSection.style.alignItems = '';
+    mainSection.style.justifyContent = '';
+    
+    const chatHeader = document.createElement('div');
+    chatHeader.className = 'chat-header';
+    const chatTitle = document.createElement('h2');
+    chatTitle.textContent = 'Select an agent to start chatting';
+    chatTitle.className = 'chat-title';
+    chatHeader.appendChild(chatTitle);
+    
+    const messagesContainer = document.createElement('div');
+    messagesContainer.className = 'chat-messages';
+    const emptyState = document.createElement('div');
+    emptyState.className = 'chat-empty-state';
+    emptyState.innerHTML = '<p>💬</p><p>Select an agent from the sidebar to begin conversation</p>';
+    messagesContainer.appendChild(emptyState);
+    
+    const inputArea = document.createElement('div');
+    inputArea.className = 'chat-input-area';
+    const messageInput = document.createElement('input');
+    messageInput.type = 'text';
+    messageInput.className = 'chat-input';
+    messageInput.placeholder = 'Type your message...';
+    messageInput.disabled = true;
+    const sendButton = document.createElement('button');
+    sendButton.className = 'chat-send-btn';
+    sendButton.textContent = 'Send';
+    sendButton.disabled = true;
+    
+    const sendMessage = () => {
+      const text = messageInput.value.trim();
+      if (!text || !selectedAgent) return;
+      if (!chatHistory[selectedAgent.id]) {
+        chatHistory[selectedAgent.id] = [];
+      }
+      const message = {
+        text,
+        sender: 'user',
+        timestamp: new Date().toISOString()
+      };
+      chatHistory[selectedAgent.id].push(message);
+      saveChatHistory();
+      updateChatMessages(mainSection, selectedAgent);
+      messageInput.value = '';
+      setTimeout(() => {
+        const agentResponse = {
+          text: `I received your message: "${text}". How can I help you further?`,
+          sender: 'agent',
+          timestamp: new Date().toISOString()
+        };
+        chatHistory[selectedAgent.id].push(agentResponse);
+        saveChatHistory();
+        updateChatMessages(mainSection, selectedAgent);
+      }, 1000);
+    };
+    
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    
+    inputArea.appendChild(messageInput);
+    inputArea.appendChild(sendButton);
+    mainSection.appendChild(chatHeader);
+    mainSection.appendChild(messagesContainer);
+    mainSection.appendChild(inputArea);
+  }
+}
+
 function updateSidebarAgentList(sidebar, agents, mainSection) {
   const agentList = sidebar.querySelector('.sidebar-agent-list');
   if (!agentList) return;
@@ -273,6 +390,10 @@ function updateSidebarAgentList(sidebar, agents, mainSection) {
     const icon = document.createElement('span');
     icon.className = 'agent-icon';
     icon.textContent = agent.name.charAt(0);
+    
+    // Apply role-specific color
+    const roleColor = agentStore.getRoleColor(agent.role);
+    icon.style.background = `linear-gradient(135deg, ${roleColor.primary}, ${roleColor.secondary})`;
     
     const info = document.createElement('div');
     info.className = 'agent-info';
@@ -374,9 +495,10 @@ function updateChatWindow(mainSection, agent) {
   const sendButton = mainSection.querySelector('.chat-send-btn');
   
   if (chatTitle) {
+    const roleColor = agentStore.getRoleColor(agent.role);
     chatTitle.innerHTML = `
       <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${roleColor.primary}, ${roleColor.secondary}); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
           ${agent.name.charAt(0)}
         </div>
         <div>
