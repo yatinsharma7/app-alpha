@@ -1,7 +1,6 @@
 import "./template.css";
-import initHomepage from "./homepage";
 import initPage from "./page";
-import initSecondary from "./secondary";
+import initHomepage from "./homepage";
 
 function setActiveLink(el) {
 	// clear previous
@@ -16,13 +15,9 @@ function setActiveLink(el) {
 
 function loadFromHash(hash) {
 	switch (hash) {
-		case '#about':
+		case '#team-assembly':
 			initPage();
-			setActiveLink(document.getElementById('about-link'));
-			break;
-		case '#store':
-			initSecondary();
-			setActiveLink(document.getElementById('store-link'));
+			setActiveLink(document.getElementById('team-assembly-link'));
 			break;
 		case '#home':
 		default:
@@ -47,8 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// Wire up click handlers (degrade gracefully thanks to href values)
 	const homeLink = document.getElementById('home-link');
-	const aboutLink = document.getElementById('about-link');
-	const storeLink = document.getElementById('store-link');
+	const teamAssemblyLink = document.getElementById('team-assembly-link');
 
 	if (homeLink) {
 		homeLink.addEventListener('click', (e) => {
@@ -59,21 +53,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	if (aboutLink) {
-		aboutLink.addEventListener('click', (e) => {
+	if (teamAssemblyLink) {
+		teamAssemblyLink.addEventListener('click', (e) => {
 			e.preventDefault();
 			initPage();
-			setActiveLink(aboutLink);
-			history.pushState({}, '', '#about');
-		});
-	}
-
-	if (storeLink) {
-		storeLink.addEventListener('click', (e) => {
-			e.preventDefault();
-			initSecondary();
-			setActiveLink(storeLink);
-			history.pushState({}, '', '#store');
+			setActiveLink(teamAssemblyLink);
+			history.pushState({}, '', '#team-assembly');
 		});
 	}
 });
