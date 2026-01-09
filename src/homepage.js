@@ -234,7 +234,11 @@ function createMainSection() {
 }
 
 function updateMainSection(mainSection, agents) {
-  if (agents.length === 0) {
+  // Only update if transitioning between empty/non-empty states
+  const hasEmptyState = mainSection.querySelector('.empty-state-centered');
+  const hasChatInterface = mainSection.querySelector('.chat-header');
+  
+  if (agents.length === 0 && !hasEmptyState) {
     // Show empty state when no team exists
     mainSection.innerHTML = '';
     mainSection.className = 'team-main';
@@ -271,8 +275,8 @@ function updateMainSection(mainSection, agents) {
     emptyStateContainer.appendChild(startBtn);
     
     mainSection.appendChild(emptyStateContainer);
-  } else if (!mainSection.querySelector('.chat-header')) {
-    // Re-create chat interface if it was cleared
+  } else if (agents.length > 0 && !hasChatInterface) {
+    // Re-create chat interface only when transitioning from empty state to having agents
     mainSection.innerHTML = '';
     mainSection.className = 'team-main chat-window';
     mainSection.style.display = '';
