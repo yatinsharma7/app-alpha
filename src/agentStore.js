@@ -1,4 +1,5 @@
 // Agent state management - single source of truth for all agents
+
 const AGENT_ROLES = [
   'Data Analyst',
   'Project Manager',
@@ -153,7 +154,10 @@ class AgentStore {
     const agent = {
       id: this.nextId++,
       name: customName && customName.trim() ? customName.trim() : role,
-      role: role
+      role: role,
+      // AI-related fields
+      conversationHistory: [],
+      temperature: 0.7,
     };
     this.agents.push(agent);
     
@@ -270,6 +274,48 @@ class AgentStore {
   // Get color for a role
   getRoleColor(role) {
     return ROLE_COLORS[role] || { primary: '#2563eb', secondary: '#60a5fa' };
+  }
+
+  // Add message to agent's conversation history
+  addToConversationHistory(agentId, message) {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (agent) {
+      if (!agent.conversationHistory) {
+        agent.conversationHistory = [];
+      }
+      agent.conversationHistory.push(message);
+      this.saveToStorage();
+      return true;
+    }
+    return false;
+  }
+
+  // Get agent's conversation history
+  getConversationHistory(agentId) {
+    const agent = this.agents.find(a => a.id === agentId);
+    return agent?.conversationHistory || [];
+  }
+
+  // Clear agent's conversation history
+  clearConversationHistory(agentId) {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (agent) {
+      agent.conversationHistory = [];
+      this.saveToStorage();
+      return true;
+    }
+    return false;
+  }
+
+  // Update agent temperature setting
+  updateAgentTemperature(agentId, temperature) {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (agent && temperature >= 0 && temperature <= 1) {
+      agent.temperature = temperature;
+      this.saveToStorage();
+      return true;
+    }
+    return false;
   }
 }
 

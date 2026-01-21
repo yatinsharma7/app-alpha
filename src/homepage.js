@@ -1,4 +1,5 @@
 import agentStore from './agentStore';
+import { geminiService } from './geminiService';
 
 // Store cleanup functions using a WeakMap for proper memory management
 const cleanupMap = new WeakMap();
@@ -197,23 +198,79 @@ function createMainSection() {
     };
     
     chatHistory[selectedAgent.id].push(message);
+    agentStore.addToConversationHistory(selectedAgent.id, message);
     saveChatHistory();
     
     // Update UI
     updateChatMessages(mainSection, selectedAgent);
     messageInput.value = '';
     
-    // Simulate agent response after a short delay
-    setTimeout(() => {
-      const agentResponse = {
-        text: `I received your message: "${text}". How can I help you further?`,
+    // Disable input while waiting for response
+    messageInput.disabled = true;
+    sendButton.disabled = true;
+    
+    // Create placeholder for streaming response
+    const agentMessagePlaceholder = {
+      text: '',
+      sender: 'agent',
+      timestamp: new Date().toISOString(),
+      streaming: true
+    };
+    chatHistory[selectedAgent.id].push(agentMessagePlaceholder);
+    updateChatMessages(mainSection, selectedAgent);
+    
+    // Call Gemini API with streaming
+    const conversationHistory = agentStore.getConversationHistory(selectedAgent.id);
+    geminiService.sendMessageStream(
+      selectedAgent.id,
+      selectedAgent.role,
+      text,
+      conversationHistory,
+      (chunk) => {
+        // Update the placeholder message with each chunk
+        agentMessagePlaceholder.text += chunk;
+        updateChatMessages(mainSection, selectedAgent);
+      },
+      selectedAgent.temperature
+    ).then((fullResponse) => {
+      // Mark streaming as complete
+      delete agentMessagePlaceholder.streaming;
+      agentMessagePlaceholder.text = fullResponse;
+      
+      // Add to agent's conversation history
+      agentStore.addToConversationHistory(selectedAgent.id, {
+        text: fullResponse,
         sender: 'agent',
-        timestamp: new Date().toISOString()
-      };
-      chatHistory[selectedAgent.id].push(agentResponse);
+        timestamp: agentMessagePlaceholder.timestamp
+      });
+      
       saveChatHistory();
       updateChatMessages(mainSection, selectedAgent);
-    }, 1000);
+      
+      // Re-enable input
+      messageInput.disabled = false;
+      sendButton.disabled = false;
+      messageInput.focus();
+    }).catch((error) => {
+      console.error('Error getting response from Gemini:', error);
+      
+      // Remove placeholder and show error
+      chatHistory[selectedAgent.id].pop();
+      
+      const errorMessage = {
+        text: `⚠️ Error: ${error.message || 'Failed to get response. Please check your API key in .env file.'}`,
+        sender: 'system',
+        timestamp: new Date().toISOString()
+      };
+      chatHistory[selectedAgent.id].push(errorMessage);
+      saveChatHistory();
+      updateChatMessages(mainSection, selectedAgent);
+      
+      // Re-enable input
+      messageInput.disabled = false;
+      sendButton.disabled = false;
+      messageInput.focus();
+    });
   };
 
   sendButton.addEventListener('click', sendMessage);
@@ -321,19 +378,77 @@ function updateMainSection(mainSection, agents) {
         timestamp: new Date().toISOString()
       };
       chatHistory[selectedAgent.id].push(message);
+      agentStore.addToConversationHistory(selectedAgent.id, message);
       saveChatHistory();
       updateChatMessages(mainSection, selectedAgent);
       messageInput.value = '';
-      setTimeout(() => {
-        const agentResponse = {
-          text: `I received your message: "${text}". How can I help you further?`,
+      
+      // Disable input while waiting for response
+      messageInput.disabled = true;
+      sendButton.disabled = true;
+      
+      // Create placeholder for streaming response
+      const agentMessagePlaceholder = {
+        text: '',
+        sender: 'agent',
+        timestamp: new Date().toISOString(),
+        streaming: true
+      };
+      chatHistory[selectedAgent.id].push(agentMessagePlaceholder);
+      updateChatMessages(mainSection, selectedAgent);
+      
+      // Call Gemini API with streaming
+      const conversationHistory = agentStore.getConversationHistory(selectedAgent.id);
+      geminiService.sendMessageStream(
+        selectedAgent.id,
+        selectedAgent.role,
+        text,
+        conversationHistory,
+        (chunk) => {
+          // Update the placeholder message with each chunk
+          agentMessagePlaceholder.text += chunk;
+          updateChatMessages(mainSection, selectedAgent);
+        },
+        selectedAgent.temperature
+      ).then((fullResponse) => {
+        // Mark streaming as complete
+        delete agentMessagePlaceholder.streaming;
+        agentMessagePlaceholder.text = fullResponse;
+        
+        // Add to agent's conversation history
+        agentStore.addToConversationHistory(selectedAgent.id, {
+          text: fullResponse,
           sender: 'agent',
-          timestamp: new Date().toISOString()
-        };
-        chatHistory[selectedAgent.id].push(agentResponse);
+          timestamp: agentMessagePlaceholder.timestamp
+        });
+        
         saveChatHistory();
         updateChatMessages(mainSection, selectedAgent);
-      }, 1000);
+        
+        // Re-enable input
+        messageInput.disabled = false;
+        sendButton.disabled = false;
+        messageInput.focus();
+      }).catch((error) => {
+        console.error('Error getting response from Gemini:', error);
+        
+        // Remove placeholder and show error
+        chatHistory[selectedAgent.id].pop();
+        
+        const errorMessage = {
+          text: `⚠️ Error: ${error.message || 'Failed to get response. Please check your API key in .env file.'}`,
+          sender: 'system',
+          timestamp: new Date().toISOString()
+        };
+        chatHistory[selectedAgent.id].push(errorMessage);
+        saveChatHistory();
+        updateChatMessages(mainSection, selectedAgent);
+        
+        // Re-enable input
+        messageInput.disabled = false;
+        sendButton.disabled = false;
+        messageInput.focus();
+      });
     };
     
     sendButton.addEventListener('click', sendMessage);
