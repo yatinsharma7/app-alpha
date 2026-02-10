@@ -231,7 +231,8 @@ function createMainSection() {
         agentMessagePlaceholder.text += chunk;
         updateChatMessages(mainSection, selectedAgent);
       },
-      selectedAgent.temperature
+      selectedAgent.temperature,
+      selectedAgent.model
     ).then((fullResponse) => {
       // Mark streaming as complete
       delete agentMessagePlaceholder.streaming;
@@ -409,7 +410,8 @@ function updateMainSection(mainSection, agents) {
           agentMessagePlaceholder.text += chunk;
           updateChatMessages(mainSection, selectedAgent);
         },
-        selectedAgent.temperature
+        selectedAgent.temperature,
+        selectedAgent.model
       ).then((fullResponse) => {
         // Mark streaming as complete
         delete agentMessagePlaceholder.streaming;
@@ -615,6 +617,10 @@ function updateChatWindow(mainSection, agent) {
   
   if (chatTitle) {
     const roleColor = agentStore.getRoleColor(agent.role);
+    const availableModels = agentStore.getAvailableModels();
+    const modelData = availableModels.find(m => m.id === agent.model);
+    const modelName = modelData ? modelData.name : agent.model;
+    
     chatTitle.innerHTML = `
       <div style="display: flex; align-items: center; gap: 12px;">
         <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${roleColor.primary}, ${roleColor.secondary}); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
@@ -622,7 +628,9 @@ function updateChatWindow(mainSection, agent) {
         </div>
         <div>
           <div style="font-size: 1.5rem; font-weight: 600;">${agent.name}</div>
-          <div style="font-size: 0.9rem; color: #64748b; font-weight: 400;">${agent.role}</div>
+          <div style="font-size: 0.9rem; color: #64748b; font-weight: 400;">
+            ${agent.role} <span style="color: #94a3b8; font-size: 0.85rem;">(Powered by ${modelName})</span>
+          </div>
         </div>
       </div>
     `;

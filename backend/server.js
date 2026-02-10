@@ -20,7 +20,7 @@ app.get('/health', (req, res) => {
 // Stream chat endpoint
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { agentId, role, message, conversationHistory, temperature } = req.body;
+    const { agentId, role, message, conversationHistory, temperature, model } = req.body;
 
     // Validate required fields
     if (!agentId || !role || !message) {
@@ -47,7 +47,8 @@ app.post('/api/chat/stream', async (req, res) => {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk, fullResponse })}\n\n`);
       },
-      temperature || 0.7
+      temperature || 0.7,
+      model || 'gemini-1.5-flash'
     );
 
     // Signal completion

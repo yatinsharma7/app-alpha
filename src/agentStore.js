@@ -9,6 +9,27 @@ const AGENT_ROLES = [
   'Data Engineer'
 ];
 
+// Available AI models
+const AVAILABLE_MODELS = [
+  // Google Models
+  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'Google', description: 'Latest experimental model with enhanced capabilities' },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google', description: 'Advanced reasoning and complex tasks' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google', description: 'Fast and efficient for most tasks' },
+  // OpenAI Models
+  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI', description: 'Most capable GPT-4 model' },
+  { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI', description: 'Advanced reasoning and creative tasks' },
+  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', description: 'Fast and cost-effective' },
+  // Anthropic Models
+  { id: 'claude-3-opus', name: 'Claude 3 Opus', provider: 'Anthropic', description: 'Most powerful Claude model' },
+  { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'Anthropic', description: 'Balanced performance and speed' },
+  { id: 'claude-3-haiku', name: 'Claude 3 Haiku', provider: 'Anthropic', description: 'Fast and compact' },
+  // Meta Models
+  { id: 'llama-3-70b', name: 'Llama 3 70B', provider: 'Meta', description: 'Large open-source model' },
+  { id: 'llama-3-8b', name: 'Llama 3 8B', provider: 'Meta', description: 'Efficient open-source model' },
+];
+
+const DEFAULT_MODEL = 'gemini-1.5-flash';
+
 // Role color mapping for consistent UI
 const ROLE_COLORS = {
   'Data Analyst': { primary: '#8b5cf6', secondary: '#a78bfa' },      // Purple
@@ -150,12 +171,13 @@ class AgentStore {
   }
 
   // Add a new agent
-  addAgent(role, customName = null) {
+  addAgent(role, customName = null, model = DEFAULT_MODEL) {
     const agent = {
       id: this.nextId++,
       name: customName && customName.trim() ? customName.trim() : role,
       role: role,
       // AI-related fields
+      model: model || DEFAULT_MODEL,
       conversationHistory: [],
       temperature: 0.7,
     };
@@ -215,6 +237,44 @@ class AgentStore {
   // Get available roles
   getRoles() {
     return [...AGENT_ROLES];
+  }
+
+  // Get available LLM models
+  getAvailableModels() {
+    return AVAILABLE_MODELS;
+  }
+
+  // Get default model
+  getDefaultModel() {
+    return DEFAULT_MODEL;
+  }
+
+  // Update agent's model
+  updateAgentModel(agentId, modelId) {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (agent) {
+      agent.model = modelId;
+      this.notify();
+    }
+  }
+
+  // Get available LLM models
+  getAvailableModels() {
+    return AVAILABLE_MODELS;
+  }
+
+  // Get default model
+  getDefaultModel() {
+    return DEFAULT_MODEL;
+  }
+
+  // Update agent's model
+  updateAgentModel(agentId, modelId) {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (agent) {
+      agent.model = modelId;
+      this.notify();
+    }
   }
 
   // Get approver

@@ -36,9 +36,10 @@ class VertexAIProxy {
    * @param {Array} conversationHistory - Previous messages for context
    * @param {Function} onChunk - Callback for each streamed text chunk
    * @param {number} temperature - Response randomness
+   * @param {string} model - LLM model to use
    * @returns {Promise<string>} Full response text
    */
-  async sendMessageStream(agentId, role, message, conversationHistory = [], onChunk = null, temperature = 0.7) {
+  async sendMessageStream(agentId, role, message, conversationHistory = [], onChunk = null, temperature = 0.7, model = 'gemini-1.5-flash') {
     try {
       // Ensure backend is available
       if (!this.isInitialized) {
@@ -57,6 +58,7 @@ class VertexAIProxy {
           message,
           conversationHistory,
           temperature,
+          model,
         }),
       });
 

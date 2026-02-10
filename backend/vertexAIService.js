@@ -45,16 +45,20 @@ class VertexAIService {
    * @param {string} agentId - Unique agent identifier
    * @param {string} role - Agent role for system prompt
    * @param {number} temperature - Response randomness (0-1)
+   * @param {string} modelName - Model name (e.g., 'gemini-1.5-flash')
    * @returns {Object} Vertex AI generative model
    */
-  getModel(agentId, role, temperature = 0.7) {
+  getModel(agentId, role, temperature = 0.7, modelName = 'gemini-1.5-flash') {
     if (!this.isInitialized && !this.initialize()) {
       throw new Error('Vertex AI not initialized');
     }
 
+    // Create unique cache key including model name
+    const cacheKey = `${agentId}-${modelName}`;
+
     // Return cached model if exists
-    if (this.models.has(agentId)) {
-      return this.models.get(agentId);
+    if (this.models.has(cacheKey)) {
+      return this.models.get(cacheKey);
     }
 
     // Get role-specific system instruction
@@ -62,7 +66,7 @@ class VertexAIService {
 
     // Create generative model instance
     const model = this.vertexAI.getGenerativeModel({
-      model: 'gemini-1.5-flash', // Using Gemini 1.5 Flash via Vertex AI
+      model: modelName,
       generationConfig: {
         temperature: temperature,
         topK: 40,
@@ -73,7 +77,7 @@ class VertexAIService {
     });
 
     // Cache the model
-    this.models.set(agentId, model);
+    this.models.set(cacheKey, model);
     return model;
   }
 
@@ -85,11 +89,12 @@ class VertexAIService {
    * @param {Array} conversationHistory - Previous messages for context
    * @param {Function} onChunk - Callback for each streamed text chunk
    * @param {number} temperature - Response randomness
+   * @param {string} modelName - Model name to use
    * @returns {Promise<string>} Full response text
    */
-  async sendMessageStream(agentId, role, message, conversationHistory = [], onChunk = null, temperature = 0.7) {
+  async sendMessageStream(agentId, role, message, conversationHistory = [], onChunk = null, temperature = 0.7, modelName = 'gemini-1.5-flash') {
     try {
-      const model = this.getModel(agentId, role, temperature);
+      const model = this.getModel(agentId, role, temperature, modelName);
 
       // Build chat history in Gemini format
       const history = conversationHistory.map(msg => ({

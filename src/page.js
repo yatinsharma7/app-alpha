@@ -300,6 +300,56 @@ function updateAgentCards(container, agents) {
     role.className = 'agent-card-role';
     role.textContent = agent.role;
     
+    // Model selector
+    const modelSelectContainer = document.createElement('div');
+    modelSelectContainer.className = 'agent-card-model-selector';
+    
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Model:';
+    modelLabel.style.fontSize = '0.75rem';
+    modelLabel.style.color = '#6b7280';
+    modelLabel.style.marginRight = '8px';
+    modelLabel.style.fontWeight = '500';
+    
+    const modelSelect = document.createElement('select');
+    modelSelect.className = 'agent-card-model-dropdown';
+    
+    const availableModels = agentStore.getAvailableModels();
+    
+    // Group models by provider
+    const groupedModels = {};
+    availableModels.forEach(model => {
+      if (!groupedModels[model.provider]) {
+        groupedModels[model.provider] = [];
+      }
+      groupedModels[model.provider].push(model);
+    });
+    
+    // Add optgroups for each provider
+    Object.keys(groupedModels).forEach(provider => {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = provider;
+      
+      groupedModels[provider].forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name;
+        if (model.id === agent.model) {
+          option.selected = true;
+        }
+        optgroup.appendChild(option);
+      });
+      
+      modelSelect.appendChild(optgroup);
+    });
+    
+    modelSelect.addEventListener('change', (e) => {
+      agentStore.updateAgentModel(agent.id, e.target.value);
+    });
+    
+    modelSelectContainer.appendChild(modelLabel);
+    modelSelectContainer.appendChild(modelSelect);
+    
     // Handle name editing
     let originalValue = agent.name;
     
@@ -329,6 +379,7 @@ function updateAgentCards(container, agents) {
     
     cardBody.appendChild(nameInput);
     cardBody.appendChild(role);
+    cardBody.appendChild(modelSelectContainer);
     
     card.appendChild(cardHeader);
     card.appendChild(cardBody);
@@ -504,8 +555,69 @@ function showAddAgentModal() {
   nameFormGroup.appendChild(nameInput);
   nameFormGroup.appendChild(nameHelpText);
 
+  // Model selection field
+  const modelFormGroup = document.createElement('div');
+  modelFormGroup.className = 'form-group';
+
+  const modelLabel = document.createElement('label');
+  modelLabel.textContent = 'Model';
+  modelLabel.setAttribute('for', 'agent-model-select');
+
+  const modelSelect = document.createElement('select');
+  modelSelect.id = 'agent-model-select';
+  modelSelect.className = 'agent-role-select';
+  modelSelect.required = true;
+
+  const modelPlaceholder = document.createElement('option');
+  modelPlaceholder.value = '';
+  modelPlaceholder.textContent = 'Choose a model...';
+  modelPlaceholder.disabled = true;
+  modelSelect.appendChild(modelPlaceholder);
+
+  const availableModels = agentStore.getAvailableModels();
+  const defaultModel = agentStore.getDefaultModel();
+  
+  // Group models by provider
+  const groupedModels = {};
+  availableModels.forEach(model => {
+    if (!groupedModels[model.provider]) {
+      groupedModels[model.provider] = [];
+    }
+    groupedModels[model.provider].push(model);
+  });
+  
+  // Add optgroups for each provider
+  Object.keys(groupedModels).forEach(provider => {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = provider;
+    
+    groupedModels[provider].forEach(model => {
+      const option = document.createElement('option');
+      option.value = model.id;
+      option.textContent = model.name;
+      if (model.id === defaultModel) {
+        option.selected = true;
+      }
+      optgroup.appendChild(option);
+    });
+    
+    modelSelect.appendChild(optgroup);
+  });
+
+  const modelHelpText = document.createElement('small');
+  modelHelpText.className = 'form-help-text';
+  modelHelpText.textContent = 'Choose the AI model for this agent';
+  modelHelpText.style.color = '#6b7280';
+  modelHelpText.style.fontSize = '0.85rem';
+  modelHelpText.style.marginTop = '4px';
+
+  modelFormGroup.appendChild(modelLabel);
+  modelFormGroup.appendChild(modelSelect);
+  modelFormGroup.appendChild(modelHelpText);
+
   form.appendChild(roleFormGroup);
   form.appendChild(nameFormGroup);
+  form.appendChild(modelFormGroup);
 
   // Auto-suggest name when role is selected
   select.addEventListener('change', () => {
@@ -559,8 +671,9 @@ function showAddAgentModal() {
     e.preventDefault();
     const role = select.value;
     const customName = nameInput.value.trim();
+    const selectedModel = modelSelect.value;
     if (role) {
-      agentStore.addAgent(role, customName || null);
+      agentStore.addAgent(role, customName || null, selectedModel);
       hideModal();
     }
   });

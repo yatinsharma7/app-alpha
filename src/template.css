@@ -781,6 +781,47 @@ body {
   font-size: 0.85rem;
 }
 
+.agent-card-model-selector {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-card-model-dropdown {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid rgba(16,24,40,0.12);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.agent-card-model-dropdown:hover {
+  border-color: var(--accent);
+  background: #fafafa;
+}
+
+.agent-card-model-dropdown:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.agent-card-model-dropdown optgroup {
+  font-weight: 600;
+  color: #374151;
+}
+
+.agent-card-model-dropdown option {
+  padding: 8px;
+}
+
 /* === APPROVER SECTION IN MAIN === */
 .approver-section {
   padding: 32px;
@@ -1271,6 +1312,19 @@ body {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.agent-role-select optgroup {
+  font-weight: 700;
+  color: #1f2937;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.agent-role-select option {
+  padding: 8px 4px;
+  font-weight: 400;
+  color: #374151;
 }
 
 .agent-name-input {
